@@ -1,0 +1,25 @@
+name: deploy-to-gh-pages
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy_to_gh_pages:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_BRANCH: main
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - run: |
+          npm install
+          npm run build
+      - run: |
+          touch dist/.nojekyll
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add -f dist
+          git commit -m "workflow build and deploy"
+          git push origin `git subtree split --prefix dist $DEPLOY_BRANCH`:gh-pages --force
