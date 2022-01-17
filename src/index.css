@@ -11,7 +11,7 @@
     @apply text-lg;
   }
   a {
-    @apply text-blue-600 underline;
+  @apply text-blue-600;
   }
   button {
     @apply border border-blue-500 text-blue-500 px-2 py-1 rounded-md;

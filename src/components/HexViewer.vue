@@ -244,4 +244,11 @@ a {
   background-color: rgb(247, 68, 98);
   color: rgb(10, 1, 1);
 }
+table td:nth-child(1) {
+  font-weight: 600;
+}
+table td:nth-child(2) {
+  font-family: monospace;
+  padding-left: 2em;
+}
 </style>

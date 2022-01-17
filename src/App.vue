@@ -9,7 +9,7 @@
         <h1>Hack N Hex</h1>
     </div>
   </nav>
-  <div class="mx-8 flex md:items-center">
+  <div class="mx-8 flex md:items-center mt-5">
     <router-view></router-view>
   </div>
 </template>

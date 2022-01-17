@@ -78,9 +78,16 @@ export default {
     <h3>{{ error }}</h3>
   </div>
 
-  <div v-if="!loading && !error" class="text-center">
-    <h3>Account: {{ addr }}</h3>
+  <div v-if="!loading && !error" class="">
     <table>
+      <tr>
+        <td>
+          Account
+        </td>
+        <td>
+          <public-address :address="addr"/>
+        </td>
+      </tr>
       <tr>
         <td>
           Account Owner
@@ -115,7 +122,8 @@ export default {
       </tr>
     </table>
     <div v-if="!loading && dataView">
-      <h4>Data</h4>
+      <h4 class="mt-4">Data</h4>
+      <hr class="mt-1 mb-2" />
       <hex-viewer :data-view="dataView"/>
     </div>
     <div v-else>
@@ -125,6 +133,13 @@ export default {
 </template>
 
 <style scoped>
+table td:nth-child(1) {
+  font-weight: 600;
+}
+table td:nth-child(2) {
+  font-family: monospace;
+  padding-left: 2em;
+}
 a {
   color: #42b983;
 }
