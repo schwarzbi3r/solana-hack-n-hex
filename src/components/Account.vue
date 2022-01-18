@@ -122,7 +122,7 @@ export default defineComponent({
           Lamports
         </td>
         <td>
-          {{ account.lamports }} ({{ account.lamports / 10 ** 7 }} SOL)
+          {{ account.lamports }} ({{ account.lamports / 10 ** 9 }} SOL)
         </td>
       </tr>
       <tr>
