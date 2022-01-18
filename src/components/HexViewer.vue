@@ -1,4 +1,4 @@
-<script>
+<script lang="js">
 
 import { binary_to_base58 } from 'base58-js'
 import PublicAddress from './PublicAddress.vue';
@@ -167,25 +167,25 @@ export default {
         </div>
       </div>
     </div>
-  </div>
-  <div>
-    <table>
-      <tr>
-        <td> <span>Offset:</span> </td>
-        <td> <span>{{ offset }}</span> </td>
-      </tr>
-      <tr>
-        <td> <span>PubKey:</span> </td>
-        <td>
-          <span v-if="decodePubKey">
-            <public-address :address="decodePubKey"/>
-          </span>
-        </td>
-      </tr>
-      <tr> <td> <span>Uint8:</span> </td> <td> <span>{{ decodeUint8 }}</span> </td> </tr>
-      <tr> <td> <span>Uint32:</span> </td> <td> <span>{{ decodeUint32 }}</span> </td> </tr>
-      <tr> <td> <span>Uint64:</span> </td> <td> <span>{{ decodeUint64 }}</span> </td> </tr>
-    </table>
+    <div class="info ml-3">
+      <table>
+        <tr>
+          <td> <span>Offset:</span> </td>
+          <td> <span>{{ offset }}</span> </td>
+        </tr>
+        <tr>
+          <td> <span>PubKey:</span> </td>
+          <td>
+            <span v-if="decodePubKey">
+              <public-address :address="decodePubKey"/>
+            </span>
+          </td>
+        </tr>
+        <tr> <td> <span>Uint8:</span> </td> <td> <span>{{ decodeUint8 }}</span> </td> </tr>
+        <tr> <td> <span>Uint32:</span> </td> <td> <span>{{ decodeUint32 }}</span> </td> </tr>
+        <tr> <td> <span>Uint64:</span> </td> <td> <span>{{ decodeUint64 }}</span> </td> </tr>
+      </table>
+    </div>
   </div>
 </template>
 

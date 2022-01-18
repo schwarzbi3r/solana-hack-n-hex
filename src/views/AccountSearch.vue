@@ -31,11 +31,15 @@ export default {
 </script>
 
 <template>
-  <form @submit.prevent="lookup">
-    <input v-model="address" placeholder="base58 Address" type='text' class="w-full px-6 py-3 text-lg border border-gray-300 outline-none" />
-    <button type="submit">Lookup</button>
+  <form @submit.prevent="lookup" class="w-96">
+    <label for="Address" class="">Address</label>
+    <input v-model="address" placeholder="base58 Address" type='text' class="w-full px-3 py-3 text-lg border border-gray-300 outline-none text-sm" />
+    <button type="submit" class="mt-3">Lookup</button>
   </form>
 </template>
 
-<style>
+<style scoped>
+  input {
+    font-family: monospace;
+  }
 </style>
