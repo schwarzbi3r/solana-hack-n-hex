@@ -20,9 +20,9 @@ export default defineComponent({
 
   data() {
     return {
-      loading: ref(true) as Ref<boolean>,
-      account: ref(null) as Ref<web3.AccountInfo<Buffer> | null>,
-      error: ref(null) as Ref<String | null>,
+      loading: true,
+      account: null as web3.AccountInfo<Buffer> | null,
+      error: null as String | null
     }
   },
 
@@ -48,6 +48,16 @@ export default defineComponent({
       }
 
       return new DataView(this.account.data.buffer)
+    },
+    dataLen(): number {
+      if (!this.account) {
+        return 0
+      }
+
+      if (!this.account.data.buffer.byteLength) {
+        return 0
+      }
+      return this.account.data.buffer.byteLength
     },
     isOnCurve(): boolean {
       return web3.PublicKey.isOnCurve(new web3.PublicKey(this.addr).toBytes())
@@ -114,7 +124,7 @@ export default defineComponent({
           Executable
         </td>
         <td>
-          {{ account.executable ?  "True" : "False" }}
+          {{ account.executable ?  "true" : "false" }}
         </td>
       </tr>
       <tr>
@@ -143,7 +153,7 @@ export default defineComponent({
       </tr>
     </table>
     <div v-if="!loading && dataView">
-      <h4 class="mt-4">Data</h4>
+      <h4 class="mt-4">Data ({{ dataLen }} bytes)</h4>
       <hr class="mt-1 mb-2" />
       <hex-viewer :data-view="dataView"/>
     </div>

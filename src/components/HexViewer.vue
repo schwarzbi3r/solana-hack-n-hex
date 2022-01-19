@@ -1,7 +1,10 @@
 <script lang="js">
 
+import { ref, reactive } from 'vue'
 import { binary_to_base58 } from 'base58-js'
 import PublicAddress from './PublicAddress.vue';
+
+let pageSize = 512
 
 DataView.prototype.getUint64 = function(byteOffset, littleEndian) {
   // split 64-bit number into two 32-bit (4-byte) parts
@@ -12,7 +15,8 @@ DataView.prototype.getUint64 = function(byteOffset, littleEndian) {
   const combined = littleEndian ? left + 2 ** 32 * right : 2 ** 32 * left + right;
 
   if (!Number.isSafeInteger(combined)) {
-    console.warn(combined, 'exceeds MAX_SAFE_INTEGER. Precision may be lost');
+    // Don't spam the logs for now
+    // console.warn(combined, 'exceeds MAX_SAFE_INTEGER. Precision may be lost');
   }
 
   return combined;
@@ -32,19 +36,57 @@ function activeLine(offset, lineIdx) {
 export default {
   components: { PublicAddress },
   props: {
-    dataView: DataView
+    dataView: {
+      type: DataView,
+      required: true,
+    }
+  },
+
+  setup() {
+    const offset = ref(0)
+    const row = reactive({
+        start: 0,
+        end:  pageSize / 16,
+      }
+    )
+    const updateOffset = (newVal) => {
+      offset.value = newVal
+      const currentRow = Math.floor(newVal/16)
+      if (currentRow >= row.end) {
+        row.start = row.start + 1
+      } else if (currentRow < row.start) {
+        row.start = row.start - 1
+      }
+      if (currentRow < row.start || currentRow >= row.end) {
+        row.start = currentRow
+      }
+      row.end = row.start + pageSize / 16
+    }
+    const updateStartAndEnd = (start, end) => {
+      row.start.value = start
+      row.end.value = end
+    }
+    return {
+      row,
+      offset,
+      updateOffset,
+      updateStartAndEnd,
+    }
   },
 
   created() {
     if (this.dataView.byteLength === 0) {
       throw new TypeError('DataView is empty')
     }
+    document.addEventListener('keydown', this.handleKey)
+  },
+  destroyed: function() {
+    window.removeEventListener('keydown', this.handleKey);
   },
 
   methods: {
     getRows(fn) {
       const rows = []
-      console.log(this.row, this.rowsLen)
       for (let row = this.row.start; row < this.rowsLen; row++) {
         const values = []
         for (let column = 0; column < this.rowLength; column++) {
@@ -57,22 +99,72 @@ export default {
       return rows
     },
     clickByte(idx, cidx) {
-      this.offset = getOffset(idx, cidx)
+      this.updateOffset(getOffset(idx, cidx))
     },
-    getOffset: getOffset,
-    activeLine: activeLine,
+    handleKey(key) {
+      switch(key.key) {
+        case 'ArrowUp': {
+          if (this.offset - 16 >= 0) {
+            this.updateOffset(this.offset - 16)
+            key.preventDefault();
+          }
+          break;
+        }
+        case 'ArrowDown': {
+          if (this.offset + 16 < this.dataView.byteLength) {
+            this.updateOffset(this.offset + 16)
+            key.preventDefault();
+          }
+          break;
+        }
+        case 'ArrowLeft': {
+          if (this.offset - 1 >= 0) {
+            this.updateOffset(this.offset - 1)
+            key.preventDefault();
+          }
+          break;
+        }
+        case 'ArrowRight': {
+          if (this.offset + 1 < this.dataView.byteLength) {
+            this.updateOffset(this.offset + 1)
+            key.preventDefault();
+          }
+          break;
+        }
+        case 'PageDown': {
+          if (this.offset + Math.floor(pageSize/2) < this.dataView.byteLength) {
+            this.updateOffset(this.offset + Math.floor(pageSize/2))
+            key.preventDefault();
+          }
+          break;
+        }
+        case 'PageUp': {
+          if (this.offset - Math.floor(pageSize/2) > 0) {
+            this.updateOffset(this.offset - Math.floor(pageSize/2))
+            key.preventDefault();
+          } else {
+            this.updateOffset(0)
+            key.preventDefault();
+          }
+          break;
+        }
+      }
+    },
+    getOffset,
+    activeLine,
   },
   data() {
     return {
       rowLength: 16,
-      row: {
-        start: 0,
-        end:  4096 / 16,
-      },
-      offset: 0,
     }
   },
   computed: {
+    relativeOffset() {
+      return this.offset - this.row.start * 16
+    },
+    currentLine() {
+      return Math.floor(this.relativeOffset / 16)
+    },
     size() {
       return this.dataView.byteLength
     },
@@ -98,7 +190,12 @@ export default {
       return this.getRows((value) => value.toString(16).padStart(2,'0').toUpperCase())
     },
     ascii() {
-      return this.getRows((value) => value >= 32 && value <= 127 ? String.fromCharCode(value) : '.')
+      return this.getRows((value) => {
+        if (value === '  ') {
+          return ' '
+        }
+        return value >= 32 && value <= 127 ? String.fromCharCode(value) : '.'
+      })
     },
     decodePubKey() {
       if (this.offset + 32 <= this.dataView.byteLength) {
@@ -140,29 +237,29 @@ export default {
   <div class="hexContainer">
     <div class='offsets'>
       <div v-for="(hexOffset, idx) in offsets" :key="hexOffset" class="line"
-        :class="{ activeLine: activeLine(offset, idx)}"
+        :class="{ activeLine: currentLine == idx}"
         >
         {{ hexOffset }}
       </div>
     </div>
     <div class='hexs'>
-      <div v-for="(row, idx) in hex" class="line"
-        :class="{ activeLine: activeLine(offset, idx)}"
+      <div v-for="(r, idx) in hex" class="line"
+        :class="{ activeLine: currentLine == idx}"
         :key="'row'+idx">
-        <div v-for="(col, cidx) in row" :key="'row'+idx+'col'+cidx">
+        <div v-for="(col, cidx) in r" :key="'row'+idx+'col'+cidx">
           <span v-on:click="clickByte(idx, cidx)"
-            :class="{'active': offset === getOffset(idx, cidx)}"
+            :class="{'active': relativeOffset === getOffset(idx, cidx)}"
           >{{ col }}</span>
           <span v-if="cidx < this.rowLength - 1">&nbsp;</span>
         </div>
       </div>
     </div>
     <div class='asciis'>
-      <div v-for="(row, idx) in ascii" class='line' :key="'row'+idx"
-            :class="{ activeLine: activeLine(offset, idx)}">
-        <div v-for="(col, cidx) in row" :key="'row'+idx+'col'+cidx">
+      <div v-for="(r, idx) in ascii" class='line' :key="'row'+idx"
+            :class="{ activeLine: currentLine == idx}">
+        <div v-for="(col, cidx) in r" :key="'row'+idx+'col'+cidx">
           <span v-on:click="clickByte(idx, cidx)"
-            :class="{'active': offset === getOffset(idx, cidx)}"
+            :class="{'active': relativeOffset === getOffset(idx, cidx)}"
           >{{ col }}</span>
         </div>
       </div>
