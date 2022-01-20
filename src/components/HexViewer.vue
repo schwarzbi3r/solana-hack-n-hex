@@ -132,13 +132,18 @@ export default {
           break;
         }
         case 'PageDown': {
+          if (this.dataView.byteLength === this.offset + 1) { return }
           if (this.offset + Math.floor(pageSize/2) < this.dataView.byteLength) {
             this.updateOffset(this.offset + Math.floor(pageSize/2))
+            key.preventDefault();
+          } else {
+            this.updateOffset(this.dataView.byteLength - 1)
             key.preventDefault();
           }
           break;
         }
         case 'PageUp': {
+          if (this.offset === 0) { return }
           if (this.offset - Math.floor(pageSize/2) > 0) {
             this.updateOffset(this.offset - Math.floor(pageSize/2))
             key.preventDefault();
